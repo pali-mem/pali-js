@@ -1,0 +1,43 @@
+{
+  "name": "pali-client-js",
+  "version": "0.1.0",
+  "description": "Typed JavaScript/TypeScript client and middleware for the Pali memory API",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "dev": "vitest"
+  },
+  "keywords": [
+    "pali",
+    "memory",
+    "sdk",
+    "llm"
+  ],
+  "author": "Pali Maintainers",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
