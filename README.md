@@ -2,6 +2,11 @@
 
 Typed JS/TS SDK and middleware for the Pali memory API.
 
+Pali is very early in development and should not be treated as a complete memory solution yet.
+Right now the product focus is infrastructure correctness and reliability first.
+
+Middleware is provided as an early-stage autopilot helper, not a guaranteed memory optimization system.
+
 ## Why JavaScript/TypeScript next
 
 Recent ecosystem signals point to JS/TS as the best companion package to Python:
@@ -38,7 +43,7 @@ Low-priority constructor fallbacks:
 
 Constructor values always win over environment values.
 
-## Middleware
+## Middleware (Experimental Autopilot)
 
 ```ts
 import { PaliClient, PaliMiddleware } from "pali-client-js";

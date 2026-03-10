@@ -31,6 +31,7 @@ export interface PaliMiddlewareOptions {
 const DEFAULT_SYSTEM_PROMPT_TEMPLATE =
   "Relevant memories:\n{{memories}}\n\nUse these memories only when they help answer the user accurately.";
 
+// Experimental autopilot helper: infra-first behavior, not a complete memory optimizer.
 export class PaliMiddleware {
   private readonly client: PaliClient;
   private readonly tenantId: string;
