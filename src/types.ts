@@ -1,8 +1,11 @@
 export type MemoryTier = "auto" | "working" | "episodic" | "semantic";
 export type SearchTier = "working" | "episodic" | "semantic";
+export type SearchRetrievalKind = "auto" | "vector" | "entity";
 export type MemoryKind = "raw_turn" | "observation" | "summary" | "event";
 export type CreatedBy = "auto" | "user" | "system";
 export type MessageRole = "system" | "user" | "assistant" | "tool";
+export type PostprocessJobStatus = "queued" | "running" | "succeeded" | "failed" | "dead_letter";
+export type PostprocessJobType = "parser_extract" | "vector_upsert";
 
 export interface HealthResponse {
   status: string;
@@ -55,6 +58,7 @@ export interface SearchMemoryRequest {
   minScore?: number;
   tiers?: SearchTier[];
   kinds?: MemoryKind[];
+  retrievalKind?: SearchRetrievalKind;
   disableTouch?: boolean;
   debug?: boolean;
 }
@@ -103,6 +107,41 @@ export interface SearchMemoryDebug {
 export interface SearchMemoryResponse {
   items: MemoryResponse[];
   debug?: SearchMemoryDebug;
+}
+
+export interface IngestMemoryResponse {
+  ingestId: string;
+  memoryIds: string[];
+  jobIds: string[];
+  acceptedAt: Date;
+}
+
+export interface ListPostprocessJobsRequest {
+  tenantId: string;
+  statuses?: PostprocessJobStatus[];
+  types?: PostprocessJobType[];
+  limit?: number;
+}
+
+export interface PostprocessJobResponse {
+  id: string;
+  ingestId: string;
+  tenantId: string;
+  memoryId: string;
+  type: PostprocessJobType | string;
+  status: PostprocessJobStatus | string;
+  attempts: number;
+  maxAttempts: number;
+  availableAt: Date;
+  leaseOwner: string;
+  leasedUntil: Date;
+  lastError: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ListPostprocessJobsResponse {
+  items: PostprocessJobResponse[];
 }
 
 export interface ChatMessage {

@@ -66,7 +66,7 @@ export function resolveConfig(input: {
       maxAttempts: maxRetries
     },
     fetchFn: input.fetchFn ?? fetch,
-    userAgent: input.userAgent ?? "pali-client-js/0.1.0"
+    userAgent: input.userAgent ?? "pali-client/0.1.0"
   };
 }
 

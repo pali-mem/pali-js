@@ -4,7 +4,11 @@ import type {
   CreateTenantRequest,
   CreateTenantResponse,
   HealthResponse,
+  IngestMemoryResponse,
+  ListPostprocessJobsRequest,
+  ListPostprocessJobsResponse,
   MemoryResponse,
+  PostprocessJobResponse,
   SearchMemoryDebug,
   SearchMemoryRequest,
   SearchMemoryResponse,
@@ -139,6 +143,54 @@ export class PaliClient {
     };
   }
 
+  async ingest(
+    requestOrTenantId: StoreMemoryRequest | string,
+    content?: string,
+    extra: Omit<StoreMemoryRequest, "tenantId" | "content"> = {}
+  ): Promise<IngestMemoryResponse> {
+    const req =
+      typeof requestOrTenantId === "string"
+        ? {
+            tenantId: requestOrTenantId,
+            content: content ?? "",
+            ...extra
+          }
+        : requestOrTenantId;
+    const payload = await this.transport.requestJSON<{
+      ingest_id: unknown;
+      memory_ids: unknown;
+      job_ids: unknown;
+      accepted_at: unknown;
+    }>({
+      method: "POST",
+      path: "/v1/memory/ingest",
+      body: serializeStore(req),
+      retryable: false
+    });
+    return parseIngestResponse(payload);
+  }
+
+  async ingestBatch(request: StoreMemoryBatchRequest | StoreMemoryRequest[]): Promise<IngestMemoryResponse> {
+    const items = Array.isArray(request) ? request : request.items;
+    if (items.length === 0) {
+      throw new ValidationError("items", "items must not be empty");
+    }
+    const payload = await this.transport.requestJSON<{
+      ingest_id: unknown;
+      memory_ids: unknown;
+      job_ids: unknown;
+      accepted_at: unknown;
+    }>({
+      method: "POST",
+      path: "/v1/memory/ingest/batch",
+      body: {
+        items: items.map(serializeStore)
+      },
+      retryable: false
+    });
+    return parseIngestResponse(payload);
+  }
+
   async search(
     requestOrTenantId: SearchMemoryRequest | string,
     query?: string,
@@ -174,6 +226,33 @@ export class PaliClient {
       retryable: true
     });
   }
+
+  async listPostprocessJobs(request: ListPostprocessJobsRequest): Promise<ListPostprocessJobsResponse> {
+    const tenantId = requiredString(request.tenantId, "tenantId");
+    const payload = await this.transport.requestJSON<{ items: unknown }>({
+      method: "GET",
+      path: "/v1/memory/jobs",
+      params: {
+        tenant_id: tenantId,
+        ...(request.limit && request.limit > 0 ? { limit: String(request.limit) } : {}),
+        ...(request.statuses && request.statuses.length > 0 ? { status: joinCSV(request.statuses) } : {}),
+        ...(request.types && request.types.length > 0 ? { type: joinCSV(request.types) } : {})
+      },
+      retryable: true
+    });
+    const items = asArray(payload.items, "items").map(parsePostprocessJob);
+    return { items };
+  }
+
+  async getPostprocessJob(jobId: string): Promise<PostprocessJobResponse> {
+    const id = requiredString(jobId, "jobId");
+    const payload = await this.transport.requestJSON<Record<string, unknown>>({
+      method: "GET",
+      path: `/v1/memory/jobs/${encodeURIComponent(id)}`,
+      retryable: true
+    });
+    return parsePostprocessJob(payload);
+  }
 }
 
 function serializeStore(request: StoreMemoryRequest): Record<string, unknown> {
@@ -205,8 +284,18 @@ function serializeSearch(request: SearchMemoryRequest): Record<string, unknown> 
     min_score: minScore,
     tiers: request.tiers ?? [],
     kinds: request.kinds ?? [],
+    retrieval_kind: request.retrievalKind ?? "auto",
     disable_touch: request.disableTouch ?? false,
     debug: request.debug ?? false
+  };
+}
+
+function parseIngestResponse(raw: Record<string, unknown>): IngestMemoryResponse {
+  return {
+    ingestId: asString(raw.ingest_id, "ingest_id"),
+    memoryIds: asArray(raw.memory_ids, "memory_ids").map((v) => asString(v, "memory_ids[]")),
+    jobIds: asArray(raw.job_ids, "job_ids").map((v) => asString(v, "job_ids[]")),
+    acceptedAt: parseDate(asString(raw.accepted_at, "accepted_at"))
   };
 }
 
@@ -265,6 +354,30 @@ function parseSearchDebug(raw: unknown): SearchMemoryDebug {
     plan: parsedPlan,
     ranking
   };
+}
+
+function parsePostprocessJob(raw: unknown): PostprocessJobResponse {
+  const record = asRecord(raw, "postprocess_job");
+  return {
+    id: asString(record.id, "id"),
+    ingestId: asString(record.ingest_id, "ingest_id"),
+    tenantId: asString(record.tenant_id, "tenant_id"),
+    memoryId: asString(record.memory_id, "memory_id"),
+    type: asString(record.type, "type"),
+    status: asString(record.status, "status"),
+    attempts: asNumber(record.attempts, "attempts"),
+    maxAttempts: asNumber(record.max_attempts, "max_attempts"),
+    availableAt: parseDate(asString(record.available_at, "available_at")),
+    leaseOwner: asString(record.lease_owner ?? "", "lease_owner"),
+    leasedUntil: parseDate(asString(record.leased_until ?? "0001-01-01T00:00:00Z", "leased_until")),
+    lastError: asString(record.last_error ?? "", "last_error"),
+    createdAt: parseDate(asString(record.created_at, "created_at")),
+    updatedAt: parseDate(asString(record.updated_at, "updated_at"))
+  };
+}
+
+function joinCSV(values: string[]): string {
+  return values.map((v) => v.trim()).filter((v) => v.length > 0).join(",");
 }
 
 function requiredString(value: string, field: string): string {

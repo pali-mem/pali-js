@@ -1,5 +1,5 @@
 {
-  "name": "pali-client-js",
+  "name": "pali-client",
   "version": "0.1.0",
   "description": "Typed JavaScript/TypeScript client and middleware for the Pali memory API",
   "type": "module",

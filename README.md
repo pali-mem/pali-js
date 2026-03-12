@@ -18,13 +18,13 @@ Recent ecosystem signals point to JS/TS as the best companion package to Python:
 ## Install
 
 ```bash
-npm install pali-client-js
+npm install pali-client
 ```
 
 ## Quickstart
 
 ```ts
-import { PaliClient } from "pali-client-js";
+import { PaliClient } from "pali-client";
 
 const client = new PaliClient("http://127.0.0.1:8080");
 await client.createTenant({ id: "user:42", name: "User 42" });
@@ -46,7 +46,7 @@ Constructor values always win over environment values.
 ## Middleware (Experimental Autopilot)
 
 ```ts
-import { PaliClient, PaliMiddleware } from "pali-client-js";
+import { PaliClient, PaliMiddleware } from "pali-client";
 
 const client = new PaliClient("http://127.0.0.1:8080");
 const middleware = new PaliMiddleware(client, "user:42");
@@ -62,7 +62,7 @@ await wrapped([{ role: "user", content: "What music do I like?" }]);
 Destructive memory actions are opt-in:
 
 ```ts
-import { PaliMiddleware } from "pali-client-js";
+import { PaliMiddleware } from "pali-client";
 
 const middleware = new PaliMiddleware(client, "user:42", {
   allowDestructiveActions: true,
@@ -95,7 +95,11 @@ Implemented:
 - `tenantStats()`
 - `store()`
 - `storeBatch()`
+- `ingest()`
+- `ingestBatch()`
 - `search()`
+- `listPostprocessJobs()`
+- `getPostprocessJob()`
 - `deleteMemory()`
 
 Not implemented because server endpoints are not currently exposed:
